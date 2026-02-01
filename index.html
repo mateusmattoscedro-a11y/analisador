@@ -2,54 +2,100 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Analisador de TXT</title>
+    <title>RF Config Analyzer</title>
     <style>
-        body { font-family: sans-serif; margin: 40px; line-height: 1.6; background: #f4f4f9; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        #output { background: #272822; color: #f8f8f2; padding: 15px; border-radius: 5px; white-space: pre-wrap; overflow-x: auto; margin-top: 20px; max-height: 400px; }
-        input[type="file"] { margin: 20px 0; }
-        .stats { font-weight: bold; color: #333; margin-top: 10px; }
+        :root { --sidebar-width: 300px; --primary: #2c3e50; --accent: #3498db; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: #f8f9fa; }
+        
+        /* Painel Lateral */
+        .sidebar { width: var(--sidebar-width); background: var(--primary); color: white; padding: 20px; display: flex; flex-direction: column; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+        .sidebar h2 { font-size: 1.2rem; margin-bottom: 20px; border-bottom: 1px solid #555; padding-bottom: 10px; }
+        
+        /* Área Principal */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        
+        /* Botões e Inputs */
+        .btn { cursor: pointer; border: none; border-radius: 4px; padding: 10px 15px; margin-top: 10px; font-weight: bold; transition: 0.3s; }
+        .btn-process { background: var(--accent); color: white; width: 100%; }
+        .btn-clear { background: #e74c3c; color: white; width: 100%; }
+        .btn:hover { opacity: 0.8; }
+        input[type="file"] { margin: 10px 0; font-size: 0.8rem; }
+
+        /* Tabela */
+        table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #ecf0f1; color: var(--primary); text-transform: uppercase; font-size: 0.85rem; }
+        tr:hover { background: #f1f1f1; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>📂 Analisador de Arquivos TXT</h2>
-    <p>Selecione um arquivo para ver o conteúdo e estatísticas básicas:</p>
+<div class="sidebar">
+    <h2>⚙️ Configuração RF</h2>
     
-    <input type="file" id="fileInput" accept=".txt">
+    <label>Importar arquivos (.txt):</label>
+    <input type="file" id="fileInput" accept=".txt" multiple>
     
-    <div id="resultArea" style="display:none;">
-        <div class="stats" id="stats"></div>
-        <div id="output"></div>
+    <button class="btn btn-process" onclick="processarArquivos()">Processar Tabela</button>
+    <button class="btn btn-clear" onclick="limparTabela()">Limpar Tabela</button>
+    
+    <div style="margin-top: auto; font-size: 0.75rem; color: #bdc3c7;">
+        Selecione múltiplos arquivos de configuração para comparar.
+    </div>
+</div>
+
+<div class="main-content">
+    <h1>Tabela Prévia de Antenas</h1>
+    <div id="tabelaContainer">
+        <p style="color: #7f8c8d;">Nenhum dado processado ainda.</p>
     </div>
 </div>
 
 <script>
+    let arquivosCarregados = [];
+
     document.getElementById('fileInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-            const conteudo = e.target.result;
-            
-            // Exibir área de resultados
-            document.getElementById('resultArea').style.display = 'block';
-            
-            // Lógica de análise simples
-            const numLinhas = conteudo.split('\n').length;
-            const numPalavras = conteudo.trim().split(/\s+/).length;
-
-            document.getElementById('stats').innerText = 
-                `Estatísticas: ${numLinhas} linhas e ${numPalavras} palavras.`;
-            
-            document.getElementById('output').textContent = conteudo;
-        };
-
-        reader.readAsText(file);
+        arquivosCarregados = Array.from(e.target.files);
     });
+
+    async function processarArquivos() {
+        const container = document.getElementById('tabelaContainer');
+        if (arquivosCarregados.length === 0) {
+            alert("Selecione pelo menos um arquivo!");
+            return;
+        }
+
+        let html = `<table>
+            <thead>
+                <tr>
+                    <th>Nome do Arquivo</th>
+                    <th>Tamanho (KB)</th>
+                    <th>Prévia do Conteúdo</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        for (let file of arquivosCarregados) {
+            const texto = await file.text();
+            // Pegamos apenas as primeiras 50 letras para a prévia da tabela
+            const previa = texto.substring(0, 60) + "...";
+            
+            html += `<tr>
+                <td><strong>${file.name}</strong></td>
+                <td>${(file.size / 1024).toFixed(2)}</td>
+                <td><code>${previa}</code></td>
+            </tr>`;
+        }
+
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+    }
+
+    function limparTabela() {
+        document.getElementById('fileInput').value = "";
+        arquivosCarregados = [];
+        document.getElementById('tabelaContainer').innerHTML = '<p style="color: #7f8c8d;">Nenhum dado processado ainda.</p>';
+    }
 </script>
 
 </body>
