@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Analisador de TXT</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; line-height: 1.6; background: #f4f4f9; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        #output { background: #272822; color: #f8f8f2; padding: 15px; border-radius: 5px; white-space: pre-wrap; overflow-x: auto; margin-top: 20px; max-height: 400px; }
+        input[type="file"] { margin: 20px 0; }
+        .stats { font-weight: bold; color: #333; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📂 Analisador de Arquivos TXT</h2>
+    <p>Selecione um arquivo para ver o conteúdo e estatísticas básicas:</p>
+    
+    <input type="file" id="fileInput" accept=".txt">
+    
+    <div id="resultArea" style="display:none;">
+        <div class="stats" id="stats"></div>
+        <div id="output"></div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const conteudo = e.target.result;
+            
+            // Exibir área de resultados
+            document.getElementById('resultArea').style.display = 'block';
+            
+            // Lógica de análise simples
+            const numLinhas = conteudo.split('\n').length;
+            const numPalavras = conteudo.trim().split(/\s+/).length;
+
+            document.getElementById('stats').innerText = 
+                `Estatísticas: ${numLinhas} linhas e ${numPalavras} palavras.`;
+            
+            document.getElementById('output').textContent = conteudo;
+        };
+
+        reader.readAsText(file);
+    });
+</script>
+
+</body>
+</html>
